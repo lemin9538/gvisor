@@ -494,6 +494,27 @@ func TestLink(t *testing.T) {
 	}
 }
 
+func TestPing6(t *testing.T) {
+	ctx := context.Background()
+	d := dockerutil.MakeContainer(ctx, t)
+	defer d.CleanUp(ctx)
+
+	// Sleep at the end because 'docker exec' gets killed if the init process
+	// exists before it can finish.
+	if err := d.Spawn(ctx, dockerutil.RunOpts{
+		Image:  "basic/bionic",
+		CapAdd: []string{"CAP_NET_ADMIN"},
+	}, "/bin/bash", "-c", "sleep 20"); err != nil {
+		t.Fatalf("docker run failed: %v", err)
+	}
+
+	// Ensure we can enable ipv6 on loopback and run ping6 without errors
+	if out, err := d.Exec(ctx, dockerutil.ExecOpts{}, "/bin/bash", "-c", "ip addr add ::1 dev lo && ping6 -c 10 ::1"); err != nil {
+		t.Errorf("output: %s", out)
+		t.Fatalf("docker exec failed: %v", err)
+	}
+}
+
 func TestMain(m *testing.M) {
 	dockerutil.EnsureSupportedDockerVersion()
 	flag.Parse()
