@@ -52,6 +52,11 @@ type Platform interface {
 	// can reliably return ErrContextCPUPreempted.
 	DetectsCPUPreemption() bool
 
+	// PreemptAllCPUsImpliesMemoryBarrier returns true if
+	// DetectsCPUPreemption() is true, and PreemptAllCPUs() causes all
+	// preempted Contexts to execute a memory barrier.
+	PreemptAllCPUsImpliesMemoryBarrier() bool
+
 	// MapUnit returns the alignment used for optional mappings into this
 	// platform's AddressSpaces. Higher values indicate lower per-page costs
 	// for AddressSpace.MapFile. As a special case, a MapUnit of 0 indicates
@@ -107,6 +112,12 @@ type NoCPUPreemptionDetection struct{}
 
 // DetectsCPUPreemption implements Platform.DetectsCPUPreemption.
 func (NoCPUPreemptionDetection) DetectsCPUPreemption() bool {
+	return false
+}
+
+// PreemptAllCPUsImpliesMemoryBarrier implements
+// Platform.PreemptAllCPUsImpliesMemoryBarrier.
+func (NoCPUPreemptionDetection) PreemptAllCPUsImpliesMemoryBarrier() bool {
 	return false
 }
 
